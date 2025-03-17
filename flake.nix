@@ -60,7 +60,16 @@
             # Both build-time and runtime dependencies
             buildInputs = with pkgs; [
               clap
+              # Add pkg-config to help find libraries
+              pkg-config
             ];
+            
+            # Ensure CLAP headers are available in C_INCLUDE_PATH
+            shellHook = ''
+              export C_INCLUDE_PATH=${pkgs.clap}/include:$C_INCLUDE_PATH
+              export LIBRARY_PATH=${pkgs.clap}/lib:$LIBRARY_PATH
+              export PKG_CONFIG_PATH=${pkgs.clap}/lib/pkgconfig:$PKG_CONFIG_PATH
+            '';
             
             # Runtime-only dependencies would go in inputsFrom or propagatedBuildInputs
             # inputsFrom = [ ];
