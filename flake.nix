@@ -25,7 +25,9 @@
         with pkgs.haskell.lib;
         pkgs.haskell.packages.ghc98.override {
           overrides = self: super: {
-        }; };
+            # You can add Haskell-specific overrides here if needed
+          }; 
+        };
     in
     {
       packages = forallSystems (
@@ -48,10 +50,21 @@
         {
           hsynth = haskellPackages.shellFor {
             packages = p: [ self.packages.${system}.hsynth ];
-            buildInputs = with haskellPackages; [
+
+            # Development tools
+            nativeBuildInputs = with haskellPackages; [
               cabal-install
               haskell-language-server
             ];
+            
+            # Both build-time and runtime dependencies
+            buildInputs = with pkgs; [
+              clap
+            ];
+            
+            # Runtime-only dependencies would go in inputsFrom or propagatedBuildInputs
+            # inputsFrom = [ ];
+            
             withHoogle = true;
           };
           default = self.devShells.${system}.hsynth;

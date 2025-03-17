@@ -1,0 +1,5 @@
+.direnv/
+dist-newstyle/
+.vscode/
+result
+cabal.project.local
