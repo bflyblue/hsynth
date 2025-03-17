@@ -2,8 +2,7 @@
 
 module Audio.Clap.Version where
 
-import Foreign.Storable
-import Data.Word
+import Foreign
 
 #include <clap/version.h>
 
