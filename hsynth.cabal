@@ -22,6 +22,7 @@ library
   exposed-modules:
     HSynth.CLAP.Bindings
     HSynth.CLAP.Plugin
+    HSynth.CLAP.Types
     HSynth.MIDI
     HSynth.Synth
 

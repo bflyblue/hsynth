@@ -1,20 +1,30 @@
 module HSynth.Synth (
   Synth,
+  Note (..),
+  Velocity,
+  Voice (..),
+  ParamId (..),
   createSynth,
   noteOn,
   noteOff,
-  setSynthParameter,
+  setParameter,
   renderAudio,
 ) where
 
 import Data.Vector.Storable (Vector)
 import Data.Vector.Storable qualified as V
 import Data.Word (Word8)
-import HSynth.MIDI (Channel, Note (..), Velocity)
 
 -- | Basic oscillator waveforms
 data Waveform = Sine | Square | Saw | Triangle
   deriving (Show, Eq, Enum)
+
+-- | Note representation
+newtype Note = Note {noteNumber :: Word8}
+  deriving (Show, Eq, Ord)
+
+-- | Note velocity (0-127)
+type Velocity = Word8
 
 -- | Voice represents a single note being played
 data Voice = Voice
@@ -61,8 +71,8 @@ createSynth sampleRate =
     }
 
 -- | Handle a note on event
-noteOn :: Synth -> Note -> Velocity -> Channel -> Synth
-noteOn synth note vel _channel =
+noteOn :: Synth -> Note -> Velocity -> Synth
+noteOn synth note vel =
   let voice =
         Voice
           { voiceNote = note
@@ -73,24 +83,37 @@ noteOn synth note vel _channel =
    in synth{synthVoices = voice : synthVoices synth}
 
 -- | Handle a note off event
-noteOff :: Synth -> Note -> Channel -> Synth
-noteOff synth note _channel =
+noteOff :: Synth -> Note -> Synth
+noteOff synth note =
   let updateVoice v =
         if voiceNote v == note
           then v{voiceActive = False}
           else v
    in synth{synthVoices = map updateVoice (synthVoices synth)}
 
--- | Update a synth parameter
-setSynthParameter :: Synth -> Word8 -> Word8 -> Synth
-setSynthParameter synth cc value =
-  case cc of
-    1 -> synth{synthWaveform = toEnum (min 3 (fromIntegral value `div` 32))}
-    74 -> synth{synthCutoff = 20 + (fromIntegral value / 127) * 19980}
-    71 -> synth{synthResonance = fromIntegral value / 127}
-    _ -> synth -- Ignore unknown control changes
+-- | Parameter IDs for our synth
+data ParamId
+  = WaveformParam
+  | CutoffParam
+  | ResonanceParam
+  deriving (Show, Eq, Enum)
 
--- | Convert a MIDI note to frequency in Hz
+-- | Update a synth parameter
+setParameter :: Synth -> ParamId -> Double -> Synth
+setParameter synth param value =
+  case param of
+    WaveformParam ->
+      -- Map 0.0-1.0 to waveform enum (0-3)
+      let waveformIdx = min 3 (floor (value * 4))
+       in synth{synthWaveform = toEnum waveformIdx}
+    CutoffParam ->
+      -- Map 0.0-1.0 to frequency range (20Hz-20kHz)
+      synth{synthCutoff = 20 + value * 19980}
+    ResonanceParam ->
+      -- Map 0.0-1.0 directly to resonance
+      synth{synthResonance = value}
+
+-- | Convert a note number to frequency in Hz
 noteToFreq :: Note -> Double
 noteToFreq (Note n) = 440 * (2 ** ((fromIntegral n - 69) / 12))
 
