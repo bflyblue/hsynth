@@ -2,16 +2,12 @@
 
 module Main where
 
-import Audio.Clap.Entry hiding (clapEntry)
-import Audio.Clap.EntryExport (makePluginEntry)
+import Audio.Clap.Entry
 import Audio.Clap.Version
 import Export (clapEntry)
 import Foreign
 import Foreign.C.String
 import Prelude hiding (init)
-
--- For testing, we define these locally to avoid name conflicts
-import Foreign.Ptr (FunPtr)
 
 main :: IO ()
 main = do
@@ -76,10 +72,3 @@ callDeinitFunction :: ClapPluginEntry -> IO ()
 callDeinitFunction entry = do
   let deinitFn = mkDeinitFnFromFunPtr (deinit entry)
   deinitFn
-
--- Convert a FunPtr back to a callable function - local definitions to avoid conflicts
-foreign import ccall "dynamic"
-  mkInitFnFromFunPtr :: FunPtr (CString -> IO Bool) -> (CString -> IO Bool)
-
-foreign import ccall "dynamic"
-  mkDeinitFnFromFunPtr :: FunPtr (IO ()) -> IO ()

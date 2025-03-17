@@ -4,11 +4,6 @@ module Audio.Clap.EntryExport (
   -- * Entry point creation
   makePluginEntry,
 
-  -- * Helper functions
-  mkInitFunPtr,
-  mkDeinitFunPtr,
-  mkGetFactoryFunPtr,
-
   -- * Dynamic function imports (for testing)
   mkInitFnFromFunPtr,
   mkDeinitFnFromFunPtr,
@@ -23,40 +18,53 @@ import Prelude hiding (init)
 
 {- | Create a fully initialized CLAP plugin entry point structure.
 This allocates the structure and populates it with the given function pointers.
+The CLAP version is automatically set to the current version from the headers.
+
+This function is designed to be called ONCE during plugin initialization
+to create the static plugin entry point that will be exported to CLAP hosts.
+Typically used with unsafePerformIO and NOINLINE for creating the global
+clap_entry symbol.
+
+MEMORY MANAGEMENT: This function creates FunPtrs that are not automatically garbage collected.
+According to the Haskell FFI specification, these would normally need to be freed with
+freeHaskellFunctionPtr when no longer needed. However, since these function pointers are
+part of the plugin's entry point structure and are expected to exist for the entire
+lifetime of the plugin library, they don't need to be explicitly freed - they will be
+cleaned up automatically when the host unloads the plugin library.
+
+Usage example:
+
+> {\-# NOINLINE clapEntry #-\}
+> clapEntry :: Ptr ClapPluginEntry
+> clapEntry = unsafePerformIO $ makePluginEntry myInit myDeinit myGetFactory
+>
+> foreign export ccall "clap_entry" clapEntry :: Ptr ClapPluginEntry
 -}
 makePluginEntry ::
-  ClapVersion ->
-  FunPtr (CString -> IO Bool) ->
-  FunPtr (IO ()) ->
-  FunPtr (CString -> IO (Ptr ())) ->
+  (CString -> IO Bool) ->
+  IO () ->
+  (CString -> IO (Ptr ())) ->
   IO (Ptr ClapPluginEntry)
-makePluginEntry version initFn deinitFn factoryFn = do
+makePluginEntry initFn deinitFn factoryFn = do
+  -- Create function pointers from the Haskell functions
+  initPtr <- mkInitFn initFn
+  deinitPtr <- mkDeinitFn deinitFn
+  factoryPtr <- mkGetFactoryFn factoryFn
+
   -- Allocate memory for the entry structure
   entryPtr <- malloc
 
-  -- Populate the structure with function pointers
+  -- Populate the structure with function pointers and current CLAP version
   poke
     entryPtr
     ClapPluginEntry
-      { clapVersion = version
-      , init = initFn
-      , deinit = deinitFn
-      , getFactory = factoryFn
+      { clapVersion = clapCurrentVersion
+      , init = initPtr
+      , deinit = deinitPtr
+      , getFactory = factoryPtr
       }
 
   return entryPtr
-
--- | Create a function pointer for an init function
-mkInitFunPtr :: (CString -> IO Bool) -> IO (FunPtr (CString -> IO Bool))
-mkInitFunPtr = mkInitFn
-
--- | Create a function pointer for a deinit function
-mkDeinitFunPtr :: IO () -> IO (FunPtr (IO ()))
-mkDeinitFunPtr = mkDeinitFn
-
--- | Create a function pointer for a getFactory function
-mkGetFactoryFunPtr :: (CString -> IO (Ptr ())) -> IO (FunPtr (CString -> IO (Ptr ())))
-mkGetFactoryFunPtr = mkGetFactoryFn
 
 {- | Convert a function pointer back to a callable init function
 Useful for testing or when you need to call the function directly

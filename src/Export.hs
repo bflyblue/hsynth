@@ -2,9 +2,7 @@
 
 module Export where
 
-import Audio.Clap.Entry hiding (clapEntry)
-import Audio.Clap.EntryExport
-import Audio.Clap.Version
+import Audio.Clap.Entry
 import Control.Concurrent.MVar
 import Control.Monad
 import Foreign
@@ -78,22 +76,17 @@ pluginGetFactory factoryIdPtr = do
   -- For now we just return null
   return nullPtr
 
--- Create the function pointers for our plugin
--- These are created at load time and kept throughout the plugin's lifecycle
-{-# NOINLINE pluginFunctionPtrs #-}
-pluginFunctionPtrs :: (FunPtr (CString -> IO Bool), FunPtr (IO ()), FunPtr (CString -> IO (Ptr ())))
-pluginFunctionPtrs = unsafePerformIO $ do
-  initPtr <- mkInitFunPtr pluginInit
-  deinitPtr <- mkDeinitFunPtr pluginDeinit
-  factoryPtr <- mkGetFactoryFunPtr pluginGetFactory
-  return (initPtr, deinitPtr, factoryPtr)
+{- | The actual entry point structure that will be exported to C.
+This follows the Haskell FFI specification for static exports.
+The entry point is created once during module initialization and
+persists for the lifetime of the loaded library.
 
--- The actual entry point structure that will be exported to C
+The NOINLINE pragma ensures that the entry structure isn't duplicated
+by the optimizer, maintaining a single consistent address for the symbol.
+-}
 {-# NOINLINE clapEntry #-}
 clapEntry :: Ptr ClapPluginEntry
-clapEntry = unsafePerformIO $ do
-  let (initPtr, deinitPtr, factoryPtr) = pluginFunctionPtrs
-  makePluginEntry clapCurrentVersion initPtr deinitPtr factoryPtr
+clapEntry = unsafePerformIO $ makePluginEntry pluginInit pluginDeinit pluginGetFactory
 
 -- Export the entry point for CLAP hosts to find
 foreign export ccall "clap_entry" clapEntry :: Ptr ClapPluginEntry

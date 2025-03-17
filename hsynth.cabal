@@ -21,8 +21,6 @@ library
   hs-source-dirs:     lib
   exposed-modules:
     Audio.Clap.Entry
-    Audio.Clap.EntryExport
-    Audio.Clap.EntryImpl
     Audio.Clap.Version
 
   build-depends:      base ^>=4.19.0.0
