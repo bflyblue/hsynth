@@ -19,15 +19,23 @@ common common
 library
   import:             common
   hs-source-dirs:     lib
-  exposed-modules:    Audio.Clap.Entry
+  exposed-modules:
+    Audio.Clap.Entry
+    Audio.Clap.EntryExport
+    Audio.Clap.EntryImpl
+    Audio.Clap.Version
+
   build-depends:      base ^>=4.19.0.0
   build-tool-depends: hsc2hs:hsc2hs
 
 executable hsynth
   import:         common
   main-is:        Main.hs
+  other-modules:  Export
   hs-source-dirs: src
   ghc-options:    -O -threaded -feager-blackholing
   build-depends:
-    , base    ^>=4.19.0.0
+    , async       ^>=2.2.5
+    , base        ^>=4.19.0.0
+    , containers  ^>=0.6.7
     , hsynth
