@@ -11,8 +11,11 @@ import Prelude hiding (init)
 
 main :: IO ()
 main = do
-  putStrLn "HSynth CLAP Plugin Test"
-  putStrLn "-----------------------"
+  putStrLn "HSynth CLAP Plugin Tester"
+  putStrLn "-------------------------"
+  putStrLn "This program tests the functionality of the HSynth CLAP plugin"
+  putStrLn "The actual plugin is built as a shared library in libhsynth-clap.so"
+  putStrLn ""
 
   putStrLn $ "CLAP Version: " ++ showVersion clapCurrentVersion
   putStrLn $ "Major: " ++ show clapVersionMajor
@@ -45,7 +48,7 @@ main = do
 
   -- Call init again to test incrementing after partial deinit
   putStrLn "\nCalling plugin init again:"
-  initResult4 <- callInitFunction entry testPath
+  _ <- callInitFunction entry testPath
 
   -- Finally, call deinit the last 2 times to free resources
   putStrLn "\nCalling plugin deinit the final 2 times (should clean up):"
@@ -55,7 +58,7 @@ main = do
   -- Clean up
   free testPath
 
-  putStrLn "\nDone."
+  putStrLn "\nDone testing. The HSynth CLAP plugin is ready to be used in a host."
 
 -- Helper function to show version in a nice format
 showVersion :: ClapVersion -> String

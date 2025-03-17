@@ -13,7 +13,7 @@ import Prelude hiding (init, id)
 
 -- | CLAP plugin factory ID, must match the C constant exactly
 clapPluginFactoryIdStr :: String
-clapPluginFactoryIdStr = #{const_str CLAP_PLUGIN_FACTORY_ID} -- "clap.plugin-factory"
+clapPluginFactoryIdStr = #{const_str CLAP_PLUGIN_FACTORY_ID}
 
 -- | Get a CString for the CLAP plugin factory ID
 getClapPluginFactoryId :: IO CString

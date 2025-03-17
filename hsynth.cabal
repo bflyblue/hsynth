@@ -27,7 +27,24 @@ library
   build-depends:      base ^>=4.19.0.0
   build-tool-depends: hsc2hs:hsc2hs
 
-executable hsynth
+foreign-library hsynth-clap
+  import:           common
+  type:             native-shared
+  lib-version-info: 0:1:0
+  mod-def-file:
+
+  if os(windows)
+    options: standalone
+
+  other-modules:    Export
+  hs-source-dirs:   src
+  c-sources:        cbits/plugin.c
+  ghc-options:      -O2 -fPIC
+  build-depends:
+    , base    ^>=4.19.0.0
+    , hsynth
+
+executable hsynth-test
   import:         common
   main-is:        Main.hs
   other-modules:  Export
