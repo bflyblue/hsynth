@@ -1,3 +1,5 @@
+{-# LANGUAGE StrictData #-}
+
 module Plugin where
 
 import Audio.Clap.Factory.PluginFactory
@@ -13,29 +15,36 @@ data Plugin = Plugin
   , pluginDescriptor :: Ptr ClapPluginDescriptor
   }
 
-plugin :: Plugin
-plugin =
+initPlugin :: IO Plugin
+initPlugin =
   Plugin
-    { initCounter = unsafePerformIO $ newIORef 0
-    , pluginFactory = unsafePerformIO $ newPluginFactory pluginCount descriptor createPlugin
-    , pluginDescriptor = unsafePerformIO $ newClapPluginDescriptor "hsynth" "hsynth" (Just "https://github.com/hsynth") (Just "https://github.com/hsynth") (Just "https://github.com/hsynth") (Just "https://github.com/hsynth") (Just "https://github.com/hsynth") (Just "https://github.com/hsynth") []
-    }
+    <$> newIORef 0
+    <*> newPluginFactory pluginCount descriptor createPlugin
+    <*> newClapPluginDescriptor
+      "hsynth.blue.bfly"
+      "hsynth"
+      (Just "bflyblue")
+      (Just "https://github.com/hsynth")
+      Nothing
+      Nothing
+      (Just "0.0")
+      (Just "Haskell Synth")
+      []
+
+{-# NOINLINE plugin #-}
+plugin :: Plugin
+plugin = unsafePerformIO initPlugin
 
 pluginCount :: GetPluginCount
 pluginCount _ = do
-  return 1
+  pure 1
 
 descriptor :: GetPluginDescriptor
-descriptor _ index = do
-  case index of
-    0 -> do
-      return (pluginDescriptor plugin)
-    _ -> do
-      return nullPtr
+descriptor _ 0 = pure (pluginDescriptor plugin)
+descriptor _ _ = pure nullPtr
 
 createPlugin :: CreatePlugin
-createPlugin _ host cPluginId = do
-  return nullPtr
+createPlugin _ _host _cPluginId = pure nullPtr
 
 foreign export ccall "pluginInit" pluginInit :: CString -> IO CBool
 
