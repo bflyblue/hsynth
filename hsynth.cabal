@@ -9,8 +9,15 @@ license:         BSD-3-Clause
 author:          Shaun Sharples
 maintainer:      shaun.sharples@gmail.com
 category:        Audio
-build-type:      Simple
+build-type:      Custom
 extra-doc-files: CHANGELOG.md
+
+custom-setup
+  setup-depends:
+    , base       >=4.11 && <5
+    , Cabal      >=3.0
+    , directory  >=1.3
+    , filepath   >=1.4
 
 common common
   ghc-options:      -Wall
@@ -28,18 +35,21 @@ library
   build-tool-depends: hsc2hs:hsc2hs
 
 foreign-library hsynth-clap
-  import:           common
-  type:             native-shared
-  lib-version-info: 0:1:0
-  mod-def-file:
+  import:         common
+  type:           native-shared
+
+  if !os(windows)
+    lib-version-info: 0:1:0
+
+  mod-def-file:   hsynth-clap.def
 
   if os(windows)
     options: standalone
 
-  other-modules:    Export
-  hs-source-dirs:   src
-  c-sources:        cbits/plugin.c
-  ghc-options:      -O2 -fPIC
+  other-modules:  Export
+  hs-source-dirs: src
+  c-sources:      cbits/plugin.c
+  ghc-options:    -O2 -fPIC
   build-depends:
     , base    ^>=4.19.0.0
     , hsynth

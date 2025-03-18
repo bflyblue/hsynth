@@ -1,0 +1,3 @@
+LIBRARY hsynth-clap
+EXPORTS
+    clap_entry = clap_entry_getter 

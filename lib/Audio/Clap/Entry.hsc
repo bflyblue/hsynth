@@ -30,7 +30,7 @@ import Foreign
 import Foreign.C.String
 import Prelude hiding (init)
 
-#include <clap/entry.h>
+#include "clap/entry.h"
 
 -- | The CLAP plugin entry point
 data ClapPluginEntry = ClapPluginEntry

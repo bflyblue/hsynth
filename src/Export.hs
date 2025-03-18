@@ -165,4 +165,5 @@ clapEntry :: Ptr ClapPluginEntry
 clapEntry = unsafePerformIO $ makePluginEntry pluginInit pluginDeinit pluginGetFactory
 
 -- Export the entry point for CLAP hosts to find
-foreign export ccall "clap_entry" clapEntry :: Ptr ClapPluginEntry
+-- Renamed to hs_clap_entry to avoid conflicts in the C wrapper
+foreign export ccall "hs_clap_entry" clapEntry :: Ptr ClapPluginEntry
