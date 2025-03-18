@@ -4,13 +4,15 @@ module Main where
 
 import Audio.Clap.Entry
 import Audio.Clap.Version
-import Export (clapEntry)
+import Export (clapEntry, finalizeHaskellRuntime, initializeHaskellRuntime)
 import Foreign
 import Foreign.C.String
 import Prelude hiding (init)
 
 main :: IO ()
 main = do
+  -- The Haskell runtime is already initialized in the main executable
+  -- But we need to simulate the environment of the plugin being loaded
   putStrLn "HSynth CLAP Plugin Tester"
   putStrLn "-------------------------"
   putStrLn "This program tests the functionality of the HSynth CLAP plugin"

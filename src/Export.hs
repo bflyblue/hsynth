@@ -32,6 +32,10 @@ emptyState =
 globalState :: MVar PluginState
 globalState = unsafePerformIO $ newMVar emptyState
 
+-- Add imports for our new initialization functions
+foreign import ccall "initialize_haskell_runtime" initializeHaskellRuntime :: IO ()
+foreign import ccall "finalize_haskell_runtime" finalizeHaskellRuntime :: IO ()
+
 -- Our implementation of the plugin's init function
 pluginInit :: CString -> IO Bool
 pluginInit pluginPath = do
@@ -44,7 +48,8 @@ pluginInit pluginPath = do
     -- Only do actual initialization on first call
     when (newCount == 1) $ do
       hPutStrLn stderr $ "Initializing HSynth plugin from: " ++ path
-    -- Here you would do your actual plugin initialization
+    -- We don't initialize the Haskell runtime here anymore
+    -- That happens externally before CLAP calls are made
 
     hPutStrLn stderr $ "Init called, ref count now: " ++ show newCount
 
@@ -61,7 +66,8 @@ pluginDeinit = do
     -- Only do actual cleanup on last call
     when (newCount == 0) $ do
       hPutStrLn stderr "Cleaning up HSynth plugin resources"
-    -- Here you would do your actual plugin cleanup
+    -- We don't finalize the Haskell runtime here
+    -- That will happen externally after CLAP is done
 
     hPutStrLn stderr $ "Deinit called, ref count now: " ++ show newCount
 
@@ -154,15 +160,29 @@ pluginGetFactory factoryIdPtr = do
 
 {- | The actual entry point structure that will be exported to C.
 This follows the Haskell FFI specification for static exports.
-The entry point is created once during module initialization and
-persists for the lifetime of the loaded library.
 
-The NOINLINE pragma ensures that the entry structure isn't duplicated
-by the optimizer, maintaining a single consistent address for the symbol.
+We'll create wrapper functions that set up the Haskell runtime
+before any CLAP calls are made.
 -}
+
+-- Wrapper for CLAP init that handles runtime initialization
+clapInitWrapper :: CString -> IO Bool
+clapInitWrapper path = do
+  -- Runtime is already initialized when this is called
+  -- by the host through the entry point
+  pluginInit path
+
+-- Wrapper for CLAP deinit
+clapDeinitWrapper :: IO ()
+clapDeinitWrapper = do
+  -- Just call our normal deinit, runtime finalization
+  -- happens after all plugin functions are done
+  pluginDeinit
+
+-- Create the entry point with our wrappers
 {-# NOINLINE clapEntry #-}
 clapEntry :: Ptr ClapPluginEntry
-clapEntry = unsafePerformIO $ makePluginEntry pluginInit pluginDeinit pluginGetFactory
+clapEntry = unsafePerformIO $ makePluginEntry clapInitWrapper clapDeinitWrapper pluginGetFactory
 
 -- Export the entry point for CLAP hosts to find
 -- Renamed to hs_clap_entry to avoid conflicts in the C wrapper

@@ -48,7 +48,10 @@ foreign-library hsynth-clap
 
   other-modules:  Export
   hs-source-dirs: src
-  c-sources:      cbits/plugin.c
+  c-sources:
+    cbits/plugin.c
+    cbits/runtime.c
+
   ghc-options:    -O2 -fPIC
   build-depends:
     , base    ^>=4.19.0.0
@@ -59,6 +62,7 @@ executable hsynth-test
   main-is:        Main.hs
   other-modules:  Export
   hs-source-dirs: src
+  c-sources:      cbits/runtime.c
   ghc-options:    -O -threaded -feager-blackholing
   build-depends:
     , async       ^>=2.2.5
