@@ -6,7 +6,7 @@ import Foreign
 
 #include <clap/version.h>
 
--- | The CLAP Version structure
+-- | The CLAP Version
 data ClapVersion = ClapVersion
   { major :: !Word32
   , minor :: !Word32
@@ -36,9 +36,9 @@ clapVersionMinor = #{const CLAP_VERSION_MINOR}
 clapVersionRevision :: Word32
 clapVersionRevision = #{const CLAP_VERSION_REVISION}
 
--- | Create a ClapVersion with the current CLAP version
-clapCurrentVersion :: ClapVersion
-clapCurrentVersion = ClapVersion 
+-- | Initialize a ClapVersion with the current CLAP version
+clapVersionInit :: ClapVersion
+clapVersionInit = ClapVersion 
   { major = clapVersionMajor
   , minor = clapVersionMinor
   , revision = clapVersionRevision

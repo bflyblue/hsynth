@@ -20,15 +20,15 @@ custom-setup
     , filepath   >=1.4
 
 common common
-  ghc-options:      -Wall
+  ghc-options:      -Wall -O2 -fPIC
   default-language: GHC2021
 
 library
   import:             common
   hs-source-dirs:     lib
   exposed-modules:
-    Audio.Clap.Entry
-    Audio.Clap.Factory
+    Audio.Clap.Factory.PluginFactory
+    Audio.Clap.Plugin
     Audio.Clap.Version
 
   build-depends:      base ^>=4.19.0.0
@@ -39,33 +39,29 @@ foreign-library hsynth-clap
   type:           native-shared
 
   if !os(windows)
-    lib-version-info: 0:1:0
-
-  mod-def-file:   hsynth-clap.def
+    lib-version-info: 0:0:0
 
   if os(windows)
     options: standalone
 
-  other-modules:  Export
   hs-source-dirs: src
-  c-sources:
-    cbits/plugin.c
-    cbits/runtime.c
-
+  other-modules:  Plugin
+  c-sources:      cbits/clap_entry.c
+  include-dirs:   vendor
   ghc-options:    -O2 -fPIC
   build-depends:
     , base    ^>=4.19.0.0
     , hsynth
 
-executable hsynth-test
-  import:         common
-  main-is:        Main.hs
-  other-modules:  Export
-  hs-source-dirs: src
-  c-sources:      cbits/runtime.c
-  ghc-options:    -O -threaded -feager-blackholing
-  build-depends:
-    , async       ^>=2.2.5
-    , base        ^>=4.19.0.0
-    , containers  ^>=0.6.7
-    , hsynth
+-- executable hsynth-test
+--   import:         common
+--   main-is:        Main.hs
+--   other-modules:  Export
+--   hs-source-dirs: src
+--   c-sources:      cbits/runtime.c
+--   ghc-options:    -O -threaded -feager-blackholing
+--   build-depends:
+--     , async       ^>=2.2.5
+--     , base        ^>=4.19.0.0
+--     , containers  ^>=0.6.7
+--     , hsynth
